@@ -15,6 +15,12 @@ public class Main {
         String dbName = System.getenv("DB_NAME");
 
         // Database connection setup
+        MyApplication app = new MyApplication(controller);
+        app.start();
+
+        // Cleanup resources
+        db.close();
+    }
         IDB db = new PostgresDB(url, user, password, dbName);
 
         // Dependency Injection: Repository depends on DB, Controller depends on Repository
@@ -22,10 +28,4 @@ public class Main {
         IUserController controller = new UserController(repo);
 
         // Application entry point
-        MyApplication app = new MyApplication(controller);
-        app.start();
-
-        // Cleanup resources
-        db.close();
-    }
 }
