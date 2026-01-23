@@ -91,3 +91,57 @@ public class UserRepository implements IUserRepository {
         return null;
     }
 }
+@Override
+public List<User> getByName(String name) {
+    List<User> users = new ArrayList<>();
+
+    try (Connection con = db.getConnection()) {
+        String sql = "SELECT id, name, surname, gender FROM users WHERE name=?";
+        PreparedStatement st = con.prepareStatement(sql);
+        st.setString(1, name);
+
+        ResultSet rs = st.executeQuery();
+        while (rs.next()) {
+            users.add(new User(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("surname"),
+                    rs.getBoolean("gender")
+            ));
+        }
+    } catch (SQLException e) {
+        System.out.println("sql error: " + e.getMessage());
+    }
+
+    return users;
+}
+@Override
+public boolean update(User user) {
+    try (Connection con = db.getConnection()) {
+        String sql = "UPDATE users SET name=?, surname=?, gender=? WHERE id=?";
+        PreparedStatement st = con.prepareStatement(sql);
+
+        st.setString(1, user.getName());
+        st.setString(2, user.getSurname());
+        st.setBoolean(3, user.getGender());
+        st.setInt(4, user.getId());
+
+        return st.executeUpdate() > 0;
+    } catch (SQLException e) {
+        System.out.println("sql error: " + e.getMessage());
+    }
+    return false;
+}
+@Override
+public boolean deleteById(int id) {
+    try (Connection con = db.getConnection()) {
+        String sql = "DELETE FROM users WHERE id=?";
+        PreparedStatement st = con.prepareStatement(sql);
+        st.setInt(1, id);
+
+        return st.executeUpdate() > 0;
+    } catch (SQLException e) {
+        System.out.println("sql error: " + e.getMessage());
+    }
+    return false;
+}
