@@ -23,7 +23,6 @@ public interface IUserRepository {
 
     List<User> getAll();
 
-    // БИЗНЕС-ЛОГИКА
     List<User> getByName(String name);
 
     boolean update(User user);
