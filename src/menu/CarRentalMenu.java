@@ -1,8 +1,14 @@
 package menu;
 
+
 import database.CarDAO;
 import model.*;
-
+import model.CarCategory;
+import factory.RentalOrderFactory;
+import model.Role;
+import model.SystemUser;
+import security.AccessManager;
+import database.RentalOrderDAO;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -10,6 +16,7 @@ public class CarRentalMenu implements Menu {
 
     private final Scanner scanner = new Scanner(System.in);
     private final CarDAO carDAO = new CarDAO();
+    private final RentalOrderDAO rentalOrderDAO = new RentalOrderDAO();
 
     private final ArrayList<Customer> customers = new ArrayList<>();
     private final ArrayList<RentalOrder> orders = new ArrayList<>();
@@ -26,6 +33,7 @@ public class CarRentalMenu implements Menu {
                 4. Add service
                 5. Create rental order
                 6. View rental orders
+                7. View full rental order (JOIN)
                 0. Exit
                 =============================
                 """);
@@ -35,6 +43,7 @@ public class CarRentalMenu implements Menu {
     @Override
     public void run() {
         boolean running = true;
+        AccessManager.login(new SystemUser("admin", Role.ADMIN));
 
         while (running) {
             displayMenu();
@@ -49,6 +58,7 @@ public class CarRentalMenu implements Menu {
                     case 4 -> addService();
                     case 5 -> createRentalOrder();
                     case 6 -> viewOrders();
+                    case 7 -> viewFullRentalOrder();
                     case 0 -> running = false;
                     default -> System.out.println("Wrong option");
                 }
@@ -60,7 +70,9 @@ public class CarRentalMenu implements Menu {
     }
 
     private void addCar() {
+        AccessManager.check(Role.ADMIN);
         System.out.print("Car ID: ");
+
         int id = scanner.nextInt();
         scanner.nextLine();
 
@@ -78,7 +90,10 @@ public class CarRentalMenu implements Menu {
         double price = scanner.nextDouble();
         scanner.nextLine();
 
-        Car car = new Car(id, brand, model, year, price);
+        System.out.println("Choose category: ECONOMY, SUV, LUXURY");
+        CarCategory category = CarCategory.valueOf(scanner.nextLine().toUpperCase());
+
+        Car car = new Car(id, brand, model, year, price, category);
         carDAO.insertCar(car);
 
         System.out.println("Car saved to database");
@@ -147,7 +162,7 @@ public class CarRentalMenu implements Menu {
         int days = scanner.nextInt();
         scanner.nextLine();
 
-        RentalOrder order = new RentalOrder(
+        RentalOrder order = RentalOrderFactory.create(
                 customers.get(cIndex),
                 cars.get(carIndex),
                 days
@@ -173,6 +188,29 @@ public class CarRentalMenu implements Menu {
     private void viewOrders() {
         for (RentalOrder order : orders) {
             System.out.println(order);
+        }
+    }
+    private void viewExpensiveCars() {
+        System.out.print("Min price per day: ");
+        double minPrice = scanner.nextDouble();
+        scanner.nextLine();
+
+        carDAO.getAllCars().stream()
+                .filter(c -> c.getPricePerDay() >= minPrice)
+                .forEach(c -> System.out.println(c.getInfo()));
+    }
+    private void viewFullRentalOrder() {
+        System.out.print("Enter order ID: ");
+        int orderId = scanner.nextInt();
+        scanner.nextLine();
+
+        var order = rentalOrderDAO.getFullRentalOrder(orderId);
+
+        if (order != null) {
+            System.out.println("=== FULL RENTAL ORDER (JOIN) ===");
+            System.out.println(order);
+        } else {
+            System.out.println("Order not found");
         }
     }
 }

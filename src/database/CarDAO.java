@@ -5,13 +5,14 @@ import model.Car;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import model.CarCategory;
 
 public class CarDAO {
 
     public void insertCar(Car car) {
         String sql = """
-                INSERT INTO car (brand, model, year, price_per_day)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO car (brand, model, year, price_per_day, category)
+                VALUES (?, ?, ?, ?, ?)
                 """;
 
         try (Connection con = DatabaseConnection.getConnection();
@@ -21,6 +22,7 @@ public class CarDAO {
             st.setString(2, car.getModel());
             st.setInt(3, car.getYear());
             st.setDouble(4, car.getPricePerDay());
+            st.setString(5, car.getCategory().name());
 
             st.executeUpdate();
         } catch (SQLException e) {
@@ -42,7 +44,8 @@ public class CarDAO {
                         rs.getString("brand"),
                         rs.getString("model"),
                         rs.getInt("year"),
-                        rs.getDouble("price_per_day")
+                        rs.getDouble("price_per_day"),
+                        CarCategory.valueOf(rs.getString("category"))
                 ));
             }
         } catch (SQLException e) {

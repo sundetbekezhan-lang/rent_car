@@ -28,11 +28,10 @@ public class RentalOrder {
     }
 
     public double getTotalPrice() {
-        double total = car.getPricePerDay() * days;
-        for (Service s : services) {
-            total += s.getPrice();
-        }
-        return total;
+        return car.getPricePerDay() * days +
+                services.stream()
+                        .mapToDouble(Service::getPrice)
+                        .sum();
     }
 
     @Override
@@ -44,5 +43,9 @@ public class RentalOrder {
                 ", services=" + services +
                 ", totalPrice=" + getTotalPrice() +
                 '}';
+    }
+    public boolean hasService(String serviceName) {
+        return services.stream()
+                .anyMatch(s -> s.toString().toLowerCase().contains(serviceName.toLowerCase()));
     }
 }
