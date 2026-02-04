@@ -6,11 +6,11 @@ import model.*;
 import model.CarCategory;
 import factory.RentalOrderFactory;
 import model.Role;
-import model.SystemUser;
 import security.AccessManager;
 import database.RentalOrderDAO;
 import java.util.ArrayList;
 import java.util.Scanner;
+import database.UserDAO;
 
 public class CarRentalMenu implements Menu {
 
@@ -22,28 +22,41 @@ public class CarRentalMenu implements Menu {
     private final ArrayList<RentalOrder> orders = new ArrayList<>();
     private final ArrayList<Service> services = new ArrayList<>();
     private final ArrayList<Insurance> insurances = new ArrayList<>();
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     public void displayMenu() {
-        System.out.println("""
-                ===== CAR RENTAL SYSTEM =====
-                1. Add car
-                2. View cars
-                3. Add customer
-                4. Add service
-                5. Create rental order
-                6. View rental orders
-                7. View full rental order (JOIN)
-                0. Exit
-                =============================
-                """);
+        System.out.println("===== CAR RENTAL SYSTEM =====");
+
+        Role role = security.AccessManager.getCurrentRole();
+
+        // Доступно всем
+        System.out.println("2. View cars");
+
+        // MANAGER и ADMIN
+        if (role == Role.MANAGER || role == Role.ADMIN) {
+            System.out.println("3. Add customer");
+            System.out.println("4. Add service");
+            System.out.println("5. Create rental order");
+            System.out.println("6. View rental orders");
+        }
+
+        // Только ADMIN
+        if (role == Role.ADMIN) {
+            System.out.println("1. Add car");
+            System.out.println("7. View full rental order (JOIN)");
+            System.out.println("8. View all customers");
+        }
+
+        System.out.println("0. Exit");
+        System.out.println("=============================");
         System.out.print("Choose option: ");
     }
 
     @Override
     public void run() {
         boolean running = true;
-        AccessManager.login(new SystemUser("admin", Role.ADMIN));
+
 
         while (running) {
             displayMenu();
@@ -59,6 +72,7 @@ public class CarRentalMenu implements Menu {
                     case 5 -> createRentalOrder();
                     case 6 -> viewOrders();
                     case 7 -> viewFullRentalOrder();
+                    case 8 -> viewAllCustomers();
                     case 0 -> running = false;
                     default -> System.out.println("Wrong option");
                 }
@@ -71,10 +85,6 @@ public class CarRentalMenu implements Menu {
 
     private void addCar() {
         AccessManager.check(Role.ADMIN);
-        System.out.print("Car ID: ");
-
-        int id = scanner.nextInt();
-        scanner.nextLine();
 
         System.out.print("Brand: ");
         String brand = scanner.nextLine();
@@ -93,7 +103,7 @@ public class CarRentalMenu implements Menu {
         System.out.println("Choose category: ECONOMY, SUV, LUXURY");
         CarCategory category = CarCategory.valueOf(scanner.nextLine().toUpperCase());
 
-        Car car = new Car(id, brand, model, year, price, category);
+        Car car = new Car(1, brand, model, year, price, category); // id не важен
         carDAO.insertCar(car);
 
         System.out.println("Car saved to database");
@@ -106,6 +116,7 @@ public class CarRentalMenu implements Menu {
     }
 
     private void addCustomer() {
+        AccessManager.check(Role.MANAGER);
         System.out.print("Customer ID: ");
         int id = scanner.nextInt();
         scanner.nextLine();
@@ -121,6 +132,9 @@ public class CarRentalMenu implements Menu {
     }
 
     private void addService() {
+
+        AccessManager.check(Role.MANAGER);
+
         System.out.print("Service name: ");
         String name = scanner.nextLine();
 
@@ -133,6 +147,7 @@ public class CarRentalMenu implements Menu {
     }
 
     private void createRentalOrder() {
+        AccessManager.check(Role.MANAGER);
         if (customers.isEmpty()) {
             System.out.println("Add customer first");
             return;
@@ -186,6 +201,7 @@ public class CarRentalMenu implements Menu {
     }
 
     private void viewOrders() {
+        AccessManager.check(Role.MANAGER);
         for (RentalOrder order : orders) {
             System.out.println(order);
         }
@@ -200,6 +216,7 @@ public class CarRentalMenu implements Menu {
                 .forEach(c -> System.out.println(c.getInfo()));
     }
     private void viewFullRentalOrder() {
+        AccessManager.check(Role.ADMIN);
         System.out.print("Enter order ID: ");
         int orderId = scanner.nextInt();
         scanner.nextLine();
@@ -212,5 +229,9 @@ public class CarRentalMenu implements Menu {
         } else {
             System.out.println("Order not found");
         }
+    }
+    private void viewAllCustomers() {
+        AccessManager.check(Role.ADMIN);
+        userDAO.printAllCustomers();
     }
 }

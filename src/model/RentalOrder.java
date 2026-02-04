@@ -1,5 +1,6 @@
 package model;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,12 +9,18 @@ public class RentalOrder {
     private Customer customer;
     private Car car;
     private int days;
+    private int orderId;
     private List<Service> services = new ArrayList<>();
+
 
     public RentalOrder(Customer customer, Car car, int days) {
         this.customer = customer;
         this.car = car;
         setDays(days);
+    }
+
+    public void setOrderId(int orderId) {
+        this.orderId = orderId;
     }
 
     public void setDays(int days) {
@@ -33,6 +40,7 @@ public class RentalOrder {
                         .mapToDouble(Service::getPrice)
                         .sum();
     }
+
 
     @Override
     public String toString() {

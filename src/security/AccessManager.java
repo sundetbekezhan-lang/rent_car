@@ -12,8 +12,19 @@ public class AccessManager {
     }
 
     public static void check(Role requiredRole) {
-        if (currentUser == null || currentUser.getRole() != requiredRole) {
+        if (currentUser == null) {
+            throw new SecurityException("Not logged in");
+        }
+
+        if (currentUser.getRole().ordinal() > requiredRole.ordinal()) {
             throw new SecurityException("Access denied");
         }
+    }
+
+    public static Role getCurrentRole() {
+        if (currentUser == null) {
+            return null;
+        }
+        return currentUser.getRole();
     }
 }

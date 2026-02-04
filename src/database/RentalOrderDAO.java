@@ -15,6 +15,7 @@ public class RentalOrderDAO {
 
         String sql = """
             SELECT
+                ro.order_id,
                 ro.days,
 
                 c.customer_id,
@@ -67,6 +68,7 @@ public class RentalOrderDAO {
                     );
 
                     order = new RentalOrder(customer, car, rs.getInt("days"));
+                    order.setOrderId(rs.getInt("order_id"));
                 }
 
                 String serviceName = rs.getString("service_name");
