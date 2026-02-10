@@ -1,21 +1,23 @@
 package database;
 
+import database.dao.ICarDAO;
 import model.Car;
+import model.CarCategory;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import model.CarCategory;
 
-public class CarDAO {
+public class CarDAO implements ICarDAO {
 
+    @Override
     public void insertCar(Car car) {
         String sql = """
                 INSERT INTO car (brand, model, year, price_per_day, category)
                 VALUES (?, ?, ?, ?, ?)
                 """;
 
-        try (Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getInstance().getConnection();
              PreparedStatement st = con.prepareStatement(sql)) {
 
             st.setString(1, car.getBrand());
@@ -26,15 +28,16 @@ public class CarDAO {
 
             st.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("DB error: " + e.getMessage());
+            throw new RuntimeException("DB error: " + e.getMessage(), e);
         }
     }
 
+    @Override
     public List<Car> getAllCars() {
         List<Car> cars = new ArrayList<>();
         String sql = "SELECT * FROM car";
 
-        try (Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getInstance().getConnection();
              Statement st = con.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
 
@@ -49,7 +52,7 @@ public class CarDAO {
                 ));
             }
         } catch (SQLException e) {
-            System.out.println("DB error: " + e.getMessage());
+            throw new RuntimeException("DB error: " + e.getMessage(), e);
         }
         return cars;
     }

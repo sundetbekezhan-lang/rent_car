@@ -1,14 +1,34 @@
 package model;
 
-public class Customer extends RentEntity {
+public class Customer {
 
+    private int id;
     private String name;
     private String phone;
 
     public Customer(int id, String name, String phone) {
-        super(id);
+        setId(id);
         setName(name);
         setPhone(phone);
+    }
+
+    public void setId(int id) {
+        if (id < 0) {
+            throw new IllegalArgumentException("ID cannot be negative");
+        }
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPhone() {
+        return phone;
     }
 
     public void setName(String name) {
@@ -25,7 +45,6 @@ public class Customer extends RentEntity {
         this.phone = phone;
     }
 
-    @Override
     public String getInfo() {
         return "Customer{id=" + id +
                 ", name='" + name + '\'' +

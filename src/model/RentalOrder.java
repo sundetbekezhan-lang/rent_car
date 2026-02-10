@@ -10,12 +10,13 @@ public class RentalOrder {
     private Car car;
     private int days;
     private int orderId;
-    private List<Service> services = new ArrayList<>();
+    private List<Service> services;
 
 
     public RentalOrder(Customer customer, Car car, int days) {
         this.customer = customer;
         this.car = car;
+        this.services = new ArrayList<>();
         setDays(days);
     }
 
@@ -32,6 +33,26 @@ public class RentalOrder {
 
     public void addService(Service service) {
         services.add(service);
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public Car getCar() {
+        return car;
+    }
+
+    public int getDays() {
+        return days;
+    }
+
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public List<Service> getServices() {
+        return services;
     }
 
     public double getTotalPrice() {

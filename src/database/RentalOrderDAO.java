@@ -1,16 +1,21 @@
 package database;
 
+import database.dao.IRentalOrderDAO;
 import model.*;
 import model.CarCategory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-public class RentalOrderDAO {
+public class RentalOrderDAO implements IRentalOrderDAO {
 
+    @Override
     public RentalOrder getFullRentalOrder(int orderId) {
 
         String sql = """
@@ -40,7 +45,7 @@ public class RentalOrderDAO {
             WHERE ro.order_id = ?
         """;
 
-        try (Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, orderId);
@@ -84,8 +89,50 @@ public class RentalOrderDAO {
             return order;
 
         } catch (Exception e) {
-            System.out.println("JOIN error: " + e.getMessage());
-            return null;
+            throw new RuntimeException("JOIN error: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void insertRentalOrder(RentalOrder order) {
+        String sql = """
+            INSERT INTO rental_order (customer_id, car_id, days)
+            VALUES (?, ?, ?)
+        """;
+
+        try (Connection con = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, order.getCustomer().getId());
+            ps.setInt(2, order.getCar().getId());
+            ps.setInt(3, order.getDays());
+            ps.executeUpdate();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error inserting rental order: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<Integer> getAllOrderIds() {
+        List<Integer> orderIds = new ArrayList<>();
+        String sql = """
+            SELECT order_id
+            FROM rental_order
+            ORDER BY order_id
+        """;
+
+        try (Connection con = DatabaseConnection.getInstance().getConnection();
+             Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                orderIds.add(rs.getInt("order_id"));
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error loading order IDs: " + e.getMessage(), e);
+        }
+        return orderIds;
     }
 }

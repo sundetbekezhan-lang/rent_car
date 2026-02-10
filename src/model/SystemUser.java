@@ -13,4 +13,8 @@ public class SystemUser {
     public Role getRole() {
         return role;
     }
+
+    public String getUsername() {
+        return username;
+    }
 }

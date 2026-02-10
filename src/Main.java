@@ -1,4 +1,6 @@
-import database.UserDAO;
+import controller.*;
+import database.*;
+import database.dao.*;
 import menu.CarRentalMenu;
 import menu.Menu;
 import model.SystemUser;
@@ -11,7 +13,20 @@ public class Main {
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
-        UserDAO userDAO = new UserDAO();
+        
+        // Initialize DAOs
+        IUserDAO userDAO = new UserDAO();
+        ICarDAO carDAO = new CarDAO();
+        ICustomerDAO customerDAO = new CustomerDAO();
+        IServiceDAO serviceDAO = new ServiceDAO();
+        IRentalOrderDAO rentalOrderDAO = new RentalOrderDAO();
+        
+        // Initialize Controllers with DAOs
+        UserController userController = new UserController(userDAO);
+        CarController carController = new CarController(carDAO);
+        CustomerController customerController = new CustomerController(customerDAO);
+        ServiceController serviceController = new ServiceController(serviceDAO);
+        RentalOrderController rentalOrderController = new RentalOrderController(rentalOrderDAO);
 
         System.out.println("=== CAR RENTAL SYSTEM ===");
         System.out.println("1. Login");
@@ -30,7 +45,7 @@ public class Main {
             System.out.print("Password: ");
             String password = scanner.nextLine();
 
-            user = userDAO.login(username, password);
+            user = userController.login(username, password);
 
             if (user == null) {
                 System.out.println("Wrong login or password");
@@ -44,15 +59,16 @@ public class Main {
             System.out.print("Choose password: ");
             String password = scanner.nextLine();
 
-            boolean success = userDAO.registerCustomer(username, password);
-
-            if (!success) {
-                System.out.println("Registration failed");
+            try {
+                boolean success = userController.registerCustomer(username, password);
+                if (success) {
+                    System.out.println("Registration successful. Please login.");
+                    user = userController.login(username, password);
+                }
+            } catch (Exception e) {
+                System.out.println("Registration failed: " + e.getMessage());
                 return;
             }
-
-            System.out.println("Registration successful. Please login.");
-            user = userDAO.login(username, password);
 
         } else {
             System.out.println("Wrong option");
@@ -61,7 +77,13 @@ public class Main {
 
         AccessManager.login(user);
 
-        Menu menu = new CarRentalMenu();
+        Menu menu = new CarRentalMenu(
+                carController,
+                customerController,
+                serviceController,
+                rentalOrderController,
+                userController
+        );
         menu.run();
     }
 }

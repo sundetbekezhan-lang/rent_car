@@ -1,15 +1,21 @@
 package database;
 
+import database.dao.IUserDAO;
+import database.exception.ValidationException;
+import model.Customer;
 import model.Role;
 import model.SystemUser;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
-public class UserDAO {
+public class UserDAO implements IUserDAO {
 
     // ===== LOGIN =====
+    @Override
     public SystemUser login(String username, String password) {
 
         // базовая валидация
@@ -24,7 +30,7 @@ public class UserDAO {
             WHERE username = ? AND password = ?
         """;
 
-        try (Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, username);
@@ -40,28 +46,35 @@ public class UserDAO {
             }
 
         } catch (Exception e) {
-            System.out.println("Login error: " + e.getMessage());
+            throw new RuntimeException("Login error: " + e.getMessage(), e);
         }
         return null;
     }
+    
 
     // ===== REGISTRATION (CUSTOMER ONLY) =====
+    @Override
     public boolean registerCustomer(String username, String password) {
 
         // базовая валидация
-        if (username == null || username.isBlank()
-                || username.length() < 3
-                || username.contains(" ")) {
-
-            System.out.println("Username must be at least 3 characters and without spaces");
-            return false;
+        if (username == null || username.isBlank()) {
+            throw new ValidationException("Username cannot be empty");
+        }
+        
+        if (username.length() < 3) {
+            throw new ValidationException("Username must be at least 3 characters");
+        }
+        
+        if (username.contains(" ")) {
+            throw new ValidationException("Username cannot contain spaces");
         }
 
-        if (password == null || password.isBlank()
-                || password.length() < 4) {
-
-            System.out.println("Password must be at least 4 characters");
-            return false;
+        if (password == null || password.isBlank()) {
+            throw new ValidationException("Password cannot be empty");
+        }
+        
+        if (password.length() < 4) {
+            throw new ValidationException("Password must be at least 4 characters");
         }
 
         String sql = """
@@ -69,7 +82,7 @@ public class UserDAO {
             VALUES (?, ?, 'USER')
         """;
 
-        try (Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, username);
@@ -78,32 +91,66 @@ public class UserDAO {
             return true;
 
         } catch (Exception e) {
-            System.out.println("Register error: " + e.getMessage());
-            return false;
+            throw new RuntimeException("Register error: " + e.getMessage(), e);
         }
-
-
     }
-    public void printAllCustomers() {
 
+    @Override
+    public List<Customer> getAllCustomers() {
+        List<Customer> customers = new ArrayList<>();
         String sql = """
-        SELECT username
-        FROM users
-        WHERE role = 'USER'
-    """;
+            SELECT username, role
+            FROM users
+            ORDER BY username
+        """;
 
-        try (Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getInstance().getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
-            System.out.println("=== CUSTOMERS ===");
-
+            int id = 1;
             while (rs.next()) {
-                System.out.println("- " + rs.getString("username"));
+                // Преобразуем пользователя из таблицы users в Customer
+                // Используем username как имя, и username как телефон (или можно оставить пустым)
+                customers.add(new Customer(
+                        id++,
+                        rs.getString("username"),
+                        "N/A" // Телефон не хранится в таблице users
+                ));
             }
 
         } catch (Exception e) {
-            System.out.println("Error loading customers: " + e.getMessage());
+            throw new RuntimeException("Error loading customers: " + e.getMessage(), e);
         }
+        return customers;
+    }
+
+    @Override
+    public Customer getCustomerByUsername(String username) {
+        String sql = """
+            SELECT username, role
+            FROM users
+            WHERE username = ?
+        """;
+
+        try (Connection con = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                // Создаем Customer из username (используем username как имя)
+                return new Customer(
+                        0, // ID не важен для создания заказа
+                        rs.getString("username"),
+                        "N/A" // Телефон не хранится в users
+                );
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error loading customer by username: " + e.getMessage(), e);
+        }
+        return null;
     }
 }

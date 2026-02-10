@@ -27,4 +27,8 @@ public class AccessManager {
         }
         return currentUser.getRole();
     }
+
+    public static SystemUser getCurrentUser() {
+        return currentUser;
+    }
 }
