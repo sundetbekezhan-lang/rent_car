@@ -77,6 +77,7 @@ public class RentalOrderFactory {
         if (car == null) {
             throw new IllegalArgumentException("Car cannot be null");
         }
+
         if (days < MIN_RENTAL_DAYS) {
             throw new IllegalArgumentException(
                 String.format("Rental days must be at least %d", MIN_RENTAL_DAYS)
