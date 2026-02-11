@@ -74,6 +74,7 @@ public class RentalOrderFactory {
         if (customer == null) {
             throw new IllegalArgumentException("Customer cannot be null");
         }
+
         if (car == null) {
             throw new IllegalArgumentException("Car cannot be null");
         }
