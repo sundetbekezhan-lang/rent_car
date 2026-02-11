@@ -54,6 +54,7 @@ public class CarDAO implements ICarDAO {
         } catch (SQLException e) {
             throw new RuntimeException("DB error: " + e.getMessage(), e);
         }
+
         return cars;
     }
 }
