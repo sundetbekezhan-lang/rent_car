@@ -77,4 +77,7 @@ public class RentalOrder {
         return services.stream()
                 .anyMatch(s -> s.toString().toLowerCase().contains(serviceName.toLowerCase()));
     }
+
+    public void setTotalPrice(double total) {
+    }
 }
